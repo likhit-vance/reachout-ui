@@ -324,11 +324,12 @@
   letter-spacing: 0.05em;
 }
 
-.channel-PULSE { background: rgba(147, 197, 253, 0.3); color: #93c5fd; }
-.channel-MOENGAGE { background: rgba(253, 230, 138, 0.3); color: #fde047; }
-.channel-INTERCOM { background: rgba(134, 239, 172, 0.3); color: #86efac; }
-.channel-DECAGON { background: rgba(216, 180, 254, 0.3); color: #d8b4fe; }
-.channel-USER_ACTION { background: rgba(251, 207, 232, 0.3); color: #fbcfe8; }
+/* Channel tags: distinct tints + darker text for readability in Activity log */
+.channel-PULSE { background: #dbeafe; color: #1d4ed8; }
+.channel-MOENGAGE { background: #ffedd5; color: #c2410c; }
+.channel-INTERCOM { background: #ccfbf1; color: #0f766e; }
+.channel-DECAGON { background: #ede9fe; color: #5b21b6; }
+.channel-USER_ACTION { background: #fce7f3; color: #9d174d; }
 
 .conv-item-time {
   font-size: 0.6875rem;
