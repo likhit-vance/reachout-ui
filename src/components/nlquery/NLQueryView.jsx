@@ -14,6 +14,7 @@ export function NLQueryView() {
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
   const [showChart, setShowChart] = useState(false);
+  const [showGeneratedQuery, setShowGeneratedQuery] = useState(false);
 
   const execute = useCallback(() => {
     if (!query.trim() || loading) return;
@@ -25,6 +26,7 @@ export function NLQueryView() {
       .then((data) => {
         setResult(data);
         setShowChart(false);
+        setShowGeneratedQuery(false);
         setHistory((prev) => [{ query: query.trim(), timestamp: new Date() }, ...prev.slice(0, 9)]);
       })
       .catch((e) => setError(e.message))
@@ -108,6 +110,32 @@ export function NLQueryView() {
                 </span>
               )}
             </div>
+            <div className="nl-generated-query-toggle">
+              <button
+                type="button"
+                className="nl-toggle-query-btn"
+                onClick={() => setShowGeneratedQuery((v) => !v)}
+                aria-expanded={showGeneratedQuery}
+              >
+                {showGeneratedQuery ? 'Hide' : 'Show'} generated MongoDB query
+              </button>
+              {showGeneratedQuery && (
+                <div
+                  className="json-block nl-generated-query-block"
+                  dangerouslySetInnerHTML={{
+                    __html: syntaxHighlight(
+                      (() => {
+                        try {
+                          return JSON.stringify(JSON.parse(result.generated_query), null, 2);
+                        } catch {
+                          return result.generated_query;
+                        }
+                      })()
+                    ),
+                  }}
+                />
+              )}
+            </div>
           </div>
 
           {result.visualization && (
@@ -130,24 +158,6 @@ export function NLQueryView() {
               )}
             </div>
           )}
-
-          <div className="card">
-            <h2>Generated MongoDB Query</h2>
-            <div
-              className="json-block"
-              dangerouslySetInnerHTML={{
-                __html: syntaxHighlight(
-                  (() => {
-                    try {
-                      return JSON.stringify(JSON.parse(result.generated_query), null, 2);
-                    } catch {
-                      return result.generated_query;
-                    }
-                  })()
-                ),
-              }}
-            />
-          </div>
 
           <div className="card nl-results-card">
             <div className="nl-results-card-header">
