@@ -4,6 +4,7 @@ import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
 import { formatTimestamp, truncate } from '../../utils/format';
 import { syntaxHighlight } from '../../utils/syntaxHighlight';
+import { arrayToCSV, downloadCSV } from '../../utils/csv';
 import { NLQueryChart } from './NLQueryChart';
 
 export function NLQueryView() {
@@ -35,6 +36,21 @@ export function NLQueryView() {
   };
 
   const resultKeys = result && result.results && result.results.length > 0 ? Object.keys(result.results[0]) : [];
+
+  const handleExportCSV = useCallback(() => {
+    if (!result?.results?.length || !resultKeys.length) return;
+    const columns = resultKeys.map((k) => ({ key: k, label: k }));
+    const rows = result.results.map((row) => {
+      const obj = {};
+      resultKeys.forEach((k) => {
+        const v = row[k];
+        obj[k] = v == null ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+      });
+      return obj;
+    });
+    const csv = arrayToCSV(rows, columns);
+    downloadCSV(csv, `nl-query-results-${Date.now()}.csv`);
+  }, [result, resultKeys]);
 
   return (
     <div>
@@ -133,8 +149,20 @@ export function NLQueryView() {
             />
           </div>
 
-          <div className="card">
-            <h2>Results ({result.result_count} items)</h2>
+          <div className="card nl-results-card">
+            <div className="nl-results-card-header">
+              <h2 className="nl-results-card-title">Results ({result.result_count} items)</h2>
+              {result.results && result.results.length > 0 && (
+                <button
+                  type="button"
+                  className="nl-export-csv-btn"
+                  onClick={handleExportCSV}
+                  aria-label="Export results to CSV"
+                >
+                  Export to CSV
+                </button>
+              )}
+            </div>
             {result.results && result.results.length > 0 ? (
               <div className="results-table-wrap">
                 <table className="results-table">

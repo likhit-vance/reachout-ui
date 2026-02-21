@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { api } from '../../api/api';
 import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
@@ -37,6 +37,7 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
   const [dimensionMappings, setDimensionMappings] = useState([]);
   const [userAction, setUserAction] = useState(null);
   const [userActionError, setUserActionError] = useState(null);
+  const [userActionRetrying, setUserActionRetrying] = useState(false);
   const [loading, setLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
   const [conversationsError, setConversationsError] = useState(null);
@@ -102,7 +103,12 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
         setUserActionError(null);
       } else {
         setUserAction(null);
-        setUserActionError(actionRes.reason?.message || 'No action mapping. Run dimension evaluation first.');
+        const raw = actionRes.reason?.message || 'No action mapping. Run dimension evaluation first.';
+        const friendly =
+          /unexpected error|internal server error|server error|500/i.test(raw)
+            ? 'Recommended action is unavailable. Run dimension evaluation or try again later.'
+            : raw;
+        setUserActionError(friendly);
       }
 
       setLoading(false);
@@ -205,6 +211,28 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
       return label && String(label).toLowerCase() !== 'no_data';
     });
   }, [dimensionMappings]);
+
+  const handleRetryAction = useCallback(() => {
+    if (!userId || userActionRetrying) return;
+    setUserActionRetrying(true);
+    setUserActionError(null);
+    api
+      .getUserAction(userId)
+      .then((data) => {
+        setUserAction(data);
+        setUserActionError(null);
+      })
+      .catch((e) => {
+        setUserAction(null);
+        const raw = e?.message || 'Recommended action unavailable.';
+        const friendly =
+          /unexpected error|internal server error|server error|500/i.test(raw)
+            ? 'Recommended action is unavailable. Run dimension evaluation or try again later.'
+            : raw;
+        setUserActionError(friendly);
+      })
+      .finally(() => setUserActionRetrying(false));
+  }, [userId, userActionRetrying]);
 
   if (!userId) {
     return (
@@ -344,7 +372,18 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
         <section className="ud-action-card-wrap">
           <h2 className="ud-summary-top-title">Recommended action</h2>
           {userActionError && !userAction && (
-            <p className="ud-muted ud-action-error">{userActionError}</p>
+            <div className="ud-action-error-wrap">
+              <p className="ud-muted ud-action-error">{userActionError}</p>
+              <button
+                type="button"
+                className="ud-action-retry-btn"
+                onClick={handleRetryAction}
+                disabled={userActionRetrying}
+                aria-label="Try again"
+              >
+                {userActionRetrying ? 'Loading…' : 'Try again'}
+              </button>
+            </div>
           )}
           {userAction && (
             <div className="ud-action-card">

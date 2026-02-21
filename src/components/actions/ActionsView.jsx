@@ -3,6 +3,7 @@ import { api } from '../../api/api';
 import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
 import { formatDateShort, getEngagementTier, getEngagementTierLabel } from '../../utils/format';
+import { arrayToCSV, downloadCSV } from '../../utils/csv';
 
 const PAGE_SIZE = 20;
 
@@ -61,6 +62,41 @@ export function ActionsView({ onSelectUser }) {
   const totalPages = usersPage?.total_pages ?? 0;
   const hasPrev = page > 0;
   const hasNext = page < totalPages - 1;
+
+  const handleExportCSV = useCallback(() => {
+    if (!usersPage?.content?.length || !selectedAction) return;
+    const columns = [
+      { key: 'user_id', label: 'User ID' },
+      { key: 'engagement_score', label: 'Engagement' },
+      { key: 'reason', label: 'Reason' },
+      { key: 'name', label: 'Name' },
+      { key: 'email', label: 'Email' },
+      { key: 'phone', label: 'Phone' },
+      { key: 'country', label: 'Country' },
+      { key: 'trust_state', label: 'Trust state' },
+      { key: 'fatigue_state', label: 'Fatigue state' },
+      { key: 'lifecycle_state', label: 'Lifecycle state' },
+      { key: 'high_value_tag', label: 'High value tag' },
+      { key: 'evaluated_at', label: 'Evaluated' },
+    ];
+    const rows = usersPage.content.map((row) => ({
+      user_id: row.user_id ?? '',
+      engagement_score: row.engagement_score ?? '',
+      reason: row.reason ?? '',
+      name: row.name ?? '',
+      email: row.email ?? '',
+      phone: row.phone ?? '',
+      country: row.country ?? '',
+      trust_state: row.dimension_snapshot?.trust_state ?? '',
+      fatigue_state: row.dimension_snapshot?.fatigue_state ?? '',
+      lifecycle_state: row.dimension_snapshot?.lifecycle_state ?? '',
+      high_value_tag: row.dimension_snapshot?.high_value_tag ?? '',
+      evaluated_at: row.evaluated_at ? formatDateShort(row.evaluated_at) : '',
+    }));
+    const csv = arrayToCSV(rows, columns);
+    const safeName = (selectedAction.action_name || 'action').replace(/[^a-z0-9_-]/gi, '_');
+    downloadCSV(csv, `action-${safeName}-users-${Date.now()}.csv`);
+  }, [usersPage, selectedAction]);
 
   if (loading) {
     return (
@@ -157,6 +193,18 @@ export function ActionsView({ onSelectUser }) {
                     <p className="actions-no-users">No users in this action.</p>
                   ) : (
                     <>
+                      <div className="actions-table-header-row">
+                        <h2 className="actions-table-title">Users ({usersPage.total_elements})</h2>
+                        <button
+                          type="button"
+                          className="actions-export-btn"
+                          onClick={handleExportCSV}
+                          disabled={!usersPage?.content?.length}
+                          aria-label="Export to CSV"
+                        >
+                          Export to CSV
+                        </button>
+                      </div>
                       <div className="actions-users-wrap">
                         <table className="actions-users-table">
                           <thead>

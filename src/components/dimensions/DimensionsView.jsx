@@ -3,6 +3,7 @@ import { api } from '../../api/api';
 import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
 import { formatDateShort } from '../../utils/format';
+import { arrayToCSV, downloadCSV } from '../../utils/csv';
 
 /**
  * One sub-category per dimension. selectedFilters is an array of
@@ -113,6 +114,30 @@ export function DimensionsView({ onSelectUser }) {
   const removeFilter = useCallback((dimensionId) => {
     setSelectedFilters((prev) => prev.filter((f) => f.dimension.id !== dimensionId));
   }, []);
+
+  const handleExportCSV = useCallback(() => {
+    if (mergedUsers.length === 0) return;
+    const columns = [
+      { key: 'user_id', label: 'User ID' },
+      ...selectedFilters.map((f, i) => ({
+        key: `dim_${i}`,
+        label: f.dimension.display_name || f.dimension.name,
+      })),
+      { key: 'evaluated_at', label: 'Evaluated' },
+    ];
+    const rows = mergedUsers.map((row) => {
+      const obj = {
+        user_id: row.user_id,
+        evaluated_at: row.evaluated_at ? formatDateShort(row.evaluated_at) : '',
+      };
+      selectedFilters.forEach((_, i) => {
+        obj[`dim_${i}`] = row.perDimension[i]?.mapping?.reason ?? '';
+      });
+      return obj;
+    });
+    const csv = arrayToCSV(rows, columns);
+    downloadCSV(csv, `dimensions-users-${Date.now()}.csv`);
+  }, [mergedUsers, selectedFilters]);
 
   const toggleExpand = (dimId) => {
     setExpandedDimId((prev) => (prev === dimId ? null : dimId));
@@ -227,9 +252,7 @@ export function DimensionsView({ onSelectUser }) {
           ) : (
             <>
               <div className="dimensions-main-header">
-                <div className="dimensions-filters-row">
-                  <h2 className="dimensions-main-title">Users in all segments</h2>
-                  <div className="dimensions-chips">
+                <div className="dimensions-chips">
                     {selectedFilters.map(({ dimension, subCategory }) => (
                       <span key={dimension.id} className="dimensions-chip">
                         <span className="dimensions-chip-label">
@@ -245,7 +268,6 @@ export function DimensionsView({ onSelectUser }) {
                         </button>
                       </span>
                     ))}
-                  </div>
                 </div>
               </div>
               {usersError && <ErrorBox message={usersError} />}
@@ -257,7 +279,20 @@ export function DimensionsView({ onSelectUser }) {
                       No users match all {selectedFilters.length} selected segment(s).
                     </p>
                   ) : (
-                    <div className="dimensions-users-wrap">
+                    <>
+                      <div className="dimensions-table-header-row">
+                        <h2 className="dimensions-table-title">Users in all segments ({mergedUsers.length})</h2>
+                        <button
+                          type="button"
+                          className="dimensions-export-btn"
+                          onClick={handleExportCSV}
+                          disabled={mergedUsers.length === 0}
+                          aria-label="Export to CSV"
+                        >
+                          Export to CSV
+                        </button>
+                      </div>
+                      <div className="dimensions-users-wrap">
                       <table className="dimensions-users-table">
                         <thead>
                           <tr>
@@ -304,7 +339,8 @@ export function DimensionsView({ onSelectUser }) {
                           ))}
                         </tbody>
                       </table>
-                    </div>
+                      </div>
+                    </>
                   )}
                 </>
               )}
