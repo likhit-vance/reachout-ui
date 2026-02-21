@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from './components/layout/Header';
-import { Sidebar } from './components/layout/Sidebar';
+import { HomeView } from './components/home/HomeView';
 import { DimensionsView } from './components/dimensions/DimensionsView';
 import { ActionsView } from './components/actions/ActionsView';
 import { NLQueryView } from './components/nlquery/NLQueryView';
@@ -13,8 +13,7 @@ const DIMENSIONS_BACK_STATE = { fromDimensions: true };
 function App() {
   const [userId, setUserId] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [activeView, setActiveView] = useState('actions');
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeView, setActiveView] = useState('home');
   const cameFromDimensionsRef = useRef(false);
 
   const handleSearch = () => {
@@ -45,6 +44,13 @@ function App() {
     }
   }, []);
 
+  const handleNavigateFromHome = useCallback((view) => {
+    if (view !== 'home') {
+      history.pushState({ fromHome: true }, '', window.location.pathname || '/');
+    }
+    setActiveView(view);
+  }, []);
+
   useEffect(() => {
     if (activeView === 'dimensions') cameFromDimensionsRef.current = false;
   }, [activeView]);
@@ -53,6 +59,8 @@ function App() {
     const onPopState = () => {
       if (cameFromDimensionsRef.current) {
         goToDimensions();
+      } else {
+        setActiveView('home');
       }
     };
     window.addEventListener('popstate', onPopState);
@@ -60,36 +68,34 @@ function App() {
   }, [goToDimensions]);
 
   const pageTitle =
-    activeView === 'dimensions'
-      ? 'Dimensions'
-      : activeView === 'actions'
-        ? 'Actions'
-        : activeView === 'users'
-          ? userId
-            ? 'User Dashboard'
-            : 'Users'
-          : 'NL Query';
+    activeView === 'home'
+      ? 'Home'
+      : activeView === 'dimensions'
+        ? ''
+        : activeView === 'actions'
+          ? ''
+          : activeView === 'users'
+            ? userId
+              ? 'User Dashboard'
+              : 'Users'
+            : 'NL Query';
 
   return (
     <div className="app-container">
-      <Sidebar
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-        activeView={activeView}
-        setActiveView={setActiveView}
-      />
       <div className="right-panel">
         <Header
-          onMenuClick={() => setSidebarOpen((o) => !o)}
-          sidebarOpen={sidebarOpen}
-          searchInput={searchInput}
-          setSearchInput={setSearchInput}
-          onSearch={handleSearch}
+          isHome={activeView === 'home'}
+          onGoHome={() => setActiveView('home')}
           userId={userId}
         />
         <div className="main-wrap">
-          <div className="main-breadcrumb">{pageTitle}</div>
-          <div className="main">
+          {activeView !== 'home' && pageTitle && (
+            <div className="main-breadcrumb">{pageTitle}</div>
+          )}
+          <div className={`main${activeView === 'home' ? ' main--home' : ''}`}>
+            {activeView === 'home' && (
+              <HomeView onNavigate={handleNavigateFromHome} />
+            )}
             {activeView === 'dimensions' && (
               <DimensionsView onSelectUser={handleSelectUserFromList} />
             )}
