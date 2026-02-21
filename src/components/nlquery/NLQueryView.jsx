@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { api } from '../../api/api';
 import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
@@ -6,6 +6,9 @@ import { formatTimestamp, truncate } from '../../utils/format';
 import { syntaxHighlight } from '../../utils/syntaxHighlight';
 import { arrayToCSV, downloadCSV } from '../../utils/csv';
 import { NLQueryChart } from './NLQueryChart';
+
+const NL_INPUT_EXPANDED_MIN_HEIGHT = 100;
+const NL_INPUT_COLLAPSED_MIN_HEIGHT = 40;
 
 export function NLQueryView() {
   const [query, setQuery] = useState('');
@@ -15,6 +18,29 @@ export function NLQueryView() {
   const [history, setHistory] = useState([]);
   const [showChart, setShowChart] = useState(false);
   const [showGeneratedQuery, setShowGeneratedQuery] = useState(false);
+  const [inputExpanded, setInputExpanded] = useState(true);
+  const textareaRef = useRef(null);
+
+  const collapseInput = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    const apply = () => {
+      el.style.minHeight = `${NL_INPUT_COLLAPSED_MIN_HEIGHT}px`;
+      el.style.height = `${Math.max(NL_INPUT_COLLAPSED_MIN_HEIGHT, el.scrollHeight)}px`;
+    };
+    requestAnimationFrame(apply);
+  }, []);
+
+  const expandInput = useCallback(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.minHeight = `${NL_INPUT_EXPANDED_MIN_HEIGHT}px`;
+    el.style.height = '';
+  }, []);
+
+  useEffect(() => {
+    if (!inputExpanded && textareaRef.current) collapseInput();
+  }, [inputExpanded, query, collapseInput]);
 
   const execute = useCallback(() => {
     if (!query.trim() || loading) return;
@@ -28,6 +54,7 @@ export function NLQueryView() {
         setShowChart(false);
         setShowGeneratedQuery(false);
         setHistory((prev) => [{ query: query.trim(), timestamp: new Date() }, ...prev.slice(0, 9)]);
+        setInputExpanded(false);
       })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
@@ -62,10 +89,18 @@ export function NLQueryView() {
           Ask questions about your data in plain English. The LLM will generate and execute MongoDB queries.
         </p>
         <textarea
+          ref={textareaRef}
           className="nl-input"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
+          onFocus={() => {
+            setInputExpanded(true);
+            expandInput();
+          }}
+          onBlur={() => {
+            setInputExpanded(false);
+          }}
           placeholder='e.g. "Find all PULSE conversations for user user_test_001" or "How many conversations per channel?"'
         />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -82,62 +117,6 @@ export function NLQueryView() {
 
       {result && (
         <>
-          <div className="card">
-            <h2>Query Explanation</h2>
-            <div className="summary-text">{result.explanation}</div>
-            <div className="nl-meta">
-              <span>
-                Collection: <strong>{result.target_collection}</strong>
-              </span>
-              <span>
-                Type: <strong>{result.is_aggregation ? 'Aggregation' : 'Find'}</strong>
-              </span>
-              <span>
-                Results: <strong>{result.result_count}</strong>
-              </span>
-              <span>
-                Time: <strong>{result.execution_time_ms}ms</strong>
-              </span>
-              {result.token_usage && (
-                <span>
-                  Tokens: <strong>{result.token_usage.input_tokens}</strong> in /{' '}
-                  <strong>{result.token_usage.output_tokens}</strong> out
-                </span>
-              )}
-              {result.llm_model && (
-                <span>
-                  Model: <strong>{result.llm_model}</strong>
-                </span>
-              )}
-            </div>
-            <div className="nl-generated-query-toggle">
-              <button
-                type="button"
-                className="nl-toggle-query-btn"
-                onClick={() => setShowGeneratedQuery((v) => !v)}
-                aria-expanded={showGeneratedQuery}
-              >
-                {showGeneratedQuery ? 'Hide' : 'Show'} generated MongoDB query
-              </button>
-              {showGeneratedQuery && (
-                <div
-                  className="json-block nl-generated-query-block"
-                  dangerouslySetInnerHTML={{
-                    __html: syntaxHighlight(
-                      (() => {
-                        try {
-                          return JSON.stringify(JSON.parse(result.generated_query), null, 2);
-                        } catch {
-                          return result.generated_query;
-                        }
-                      })()
-                    ),
-                  }}
-                />
-              )}
-            </div>
-          </div>
-
           {result.visualization && (
             <div className="card">
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
@@ -204,6 +183,62 @@ export function NLQueryView() {
             ) : (
               <p style={{ color: '#999', padding: '12px 0' }}>No results returned</p>
             )}
+          </div>
+
+          <div className="card">
+            <h2>Query Explanation</h2>
+            <div className="summary-text">{result.explanation}</div>
+            <div className="nl-meta">
+              <span>
+                Collection: <strong>{result.target_collection}</strong>
+              </span>
+              <span>
+                Type: <strong>{result.is_aggregation ? 'Aggregation' : 'Find'}</strong>
+              </span>
+              <span>
+                Results: <strong>{result.result_count}</strong>
+              </span>
+              <span>
+                Time: <strong>{result.execution_time_ms}ms</strong>
+              </span>
+              {result.token_usage && (
+                <span>
+                  Tokens: <strong>{result.token_usage.input_tokens}</strong> in /{' '}
+                  <strong>{result.token_usage.output_tokens}</strong> out
+                </span>
+              )}
+              {result.llm_model && (
+                <span>
+                  Model: <strong>{result.llm_model}</strong>
+                </span>
+              )}
+            </div>
+            <div className="nl-generated-query-toggle">
+              <button
+                type="button"
+                className="nl-toggle-query-btn"
+                onClick={() => setShowGeneratedQuery((v) => !v)}
+                aria-expanded={showGeneratedQuery}
+              >
+                {showGeneratedQuery ? 'Hide' : 'Show'} generated MongoDB query
+              </button>
+              {showGeneratedQuery && (
+                <div
+                  className="json-block nl-generated-query-block"
+                  dangerouslySetInnerHTML={{
+                    __html: syntaxHighlight(
+                      (() => {
+                        try {
+                          return JSON.stringify(JSON.parse(result.generated_query), null, 2);
+                        } catch {
+                          return result.generated_query;
+                        }
+                      })()
+                    ),
+                  }}
+                />
+              )}
+            </div>
           </div>
         </>
       )}

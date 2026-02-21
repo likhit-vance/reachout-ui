@@ -367,26 +367,11 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
         )}
       </header>
 
-      {/* Recommended action (if evaluated) */}
-      {(userAction || userActionError) && (
+      {/* Recommended action — only show when we have action data */}
+      {userAction && (
         <section className="ud-action-card-wrap">
           <h2 className="ud-summary-top-title">Recommended action</h2>
-          {userActionError && !userAction && (
-            <div className="ud-action-error-wrap">
-              <p className="ud-muted ud-action-error">{userActionError}</p>
-              <button
-                type="button"
-                className="ud-action-retry-btn"
-                onClick={handleRetryAction}
-                disabled={userActionRetrying}
-                aria-label="Try again"
-              >
-                {userActionRetrying ? 'Loading…' : 'Try again'}
-              </button>
-            </div>
-          )}
-          {userAction && (
-            <div className="ud-action-card">
+          <div className="ud-action-card">
               <div className="ud-action-header">
                 <span className="ud-action-name">{userAction.action_display_name || userAction.action_name}</span>
                 {userAction.engagement_score != null && (() => {
@@ -420,30 +405,28 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
                   Evaluated {formatTimestamp(userAction.evaluated_at)}
                 </p>
               )}
+          </div>
+        </section>
+      )}
+
+      {/* Behavior summary — only show when we have summary content */}
+      {summary && (summary.total_summary || (summary.conversation_count_by_channel && Object.keys(summary.conversation_count_by_channel).length > 0)) && (
+        <section className="ud-summary-top">
+          <h2 className="ud-summary-top-title">Behavior summary</h2>
+          {summary.total_summary && (
+            <div className="ud-summary-top-text">{summary.total_summary}</div>
+          )}
+          {summary.conversation_count_by_channel && Object.keys(summary.conversation_count_by_channel).length > 0 && (
+            <div className="ud-channel-pills">
+              {Object.entries(summary.conversation_count_by_channel).map(([ch, count]) => (
+                <span key={ch} className={`ud-channel-pill channel-${ch}`}>
+                  {ch}: {count}
+                </span>
+              ))}
             </div>
           )}
         </section>
       )}
-
-      {/* Behavior summary at top — always visible */}
-      <section className="ud-summary-top">
-        <h2 className="ud-summary-top-title">Behavior summary</h2>
-        {summaryError && <ErrorBox message={summaryError} />}
-        {!summaryError && summary?.total_summary ? (
-          <div className="ud-summary-top-text">{summary.total_summary}</div>
-        ) : (
-          <p className="ud-muted">No summary yet.</p>
-        )}
-        {summary?.conversation_count_by_channel && Object.keys(summary.conversation_count_by_channel).length > 0 && (
-          <div className="ud-channel-pills">
-            {Object.entries(summary.conversation_count_by_channel).map(([ch, count]) => (
-              <span key={ch} className={`ud-channel-pill channel-${ch}`}>
-                {ch}: {count}
-              </span>
-            ))}
-          </div>
-        )}
-      </section>
 
       {/* Tabs */}
       <div className="ud-tabs-row">
