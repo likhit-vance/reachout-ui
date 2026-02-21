@@ -32,6 +32,8 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
   const [conversations, setConversations] = useState(null);
   const [summary, setSummary] = useState(null);
   const [dimensionMappings, setDimensionMappings] = useState([]);
+  const [userAction, setUserAction] = useState(null);
+  const [userActionError, setUserActionError] = useState(null);
   const [loading, setLoading] = useState(false);
   const [detailsError, setDetailsError] = useState(null);
   const [conversationsError, setConversationsError] = useState(null);
@@ -60,17 +62,20 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
     setConversations(null);
     setSummary(null);
     setDimensionMappings([]);
+    setUserAction(null);
+    setUserActionError(null);
     setActivityList([]);
     setActivityTotal(0);
     setModalConversationId(null);
     setPropertiesOpen(false);
 
     const load = async () => {
-      const [detailsRes, convsRes, summaryRes, dimRes] = await Promise.allSettled([
+      const [detailsRes, convsRes, summaryRes, dimRes, actionRes] = await Promise.allSettled([
         api.getUserDetails(userId),
         api.getUserConversations(userId, 0, ACTIVITY_PAGE_SIZE),
         api.getUserSummary(userId),
         api.getDimensionMappingsForUser(userId),
+        api.getUserAction(userId),
       ]);
 
       if (detailsRes.status === 'fulfilled') setDetails(detailsRes.value);
@@ -88,6 +93,14 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
 
       if (dimRes.status === 'fulfilled') setDimensionMappings(dimRes.value || []);
       else setDimensionsError(dimRes.reason?.message); // optional, don't block UI
+
+      if (actionRes.status === 'fulfilled') {
+        setUserAction(actionRes.value);
+        setUserActionError(null);
+      } else {
+        setUserAction(null);
+        setUserActionError(actionRes.reason?.message || 'No action mapping. Run dimension evaluation first.');
+      }
 
       setLoading(false);
     };
@@ -322,6 +335,43 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
           </div>
         )}
       </header>
+
+      {/* Recommended action (if evaluated) */}
+      {(userAction || userActionError) && (
+        <section className="ud-action-card-wrap">
+          <h2 className="ud-summary-top-title">Recommended action</h2>
+          {userActionError && !userAction && (
+            <p className="ud-muted ud-action-error">{userActionError}</p>
+          )}
+          {userAction && (
+            <div className="ud-action-card">
+              <div className="ud-action-header">
+                <span className="ud-action-name">{userAction.action_display_name || userAction.action_name}</span>
+                {userAction.engagement_score != null && (
+                  <span className="ud-action-score">Score: {userAction.engagement_score}</span>
+                )}
+              </div>
+              {userAction.dimension_snapshot && (
+                <div className="ud-action-dims">
+                  {['trust_state', 'fatigue_state', 'lifecycle_state', 'high_value_tag'].map((key) => (
+                    <span key={key} className="ud-action-dim-pill">
+                      {key.replace(/_/g, ' ')}: {userAction.dimension_snapshot[key] ?? '—'}
+                    </span>
+                  ))}
+                </div>
+              )}
+              {userAction.reason && (
+                <p className="ud-action-reason">{userAction.reason}</p>
+              )}
+              {userAction.evaluated_at && (
+                <p className="ud-action-meta">
+                  Evaluated {formatTimestamp(userAction.evaluated_at)}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Behavior summary at top — always visible */}
       <section className="ud-summary-top">

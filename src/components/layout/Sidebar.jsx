@@ -15,6 +15,16 @@ export function Sidebar({ isOpen, onClose, activeView, setActiveView }) {
         <nav className="sidebar-nav">
           <button
             type="button"
+            className={`sidebar-nav-item${activeView === 'actions' ? ' active' : ''}`}
+            onClick={() => {
+              setActiveView('actions');
+              onClose();
+            }}
+          >
+            Actions
+          </button>
+          <button
+            type="button"
             className={`sidebar-nav-item${activeView === 'dimensions' ? ' active' : ''}`}
             onClick={() => {
               setActiveView('dimensions');
@@ -45,6 +55,11 @@ export function Sidebar({ isOpen, onClose, activeView, setActiveView }) {
           </button>
         </nav>
         <div className="sidebar-content">
+          {activeView === 'actions' && (
+            <div className="sidebar-help">
+              <p>Outreach actions and user counts. Click an action to see users.</p>
+            </div>
+          )}
           {activeView === 'dimensions' && (
             <div className="sidebar-help">
               <p>Dimensions and sub-categories for user classification.</p>

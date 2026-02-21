@@ -6,8 +6,15 @@ export const api = {
     const res = await fetch(url, options);
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      const errMsg = body.message || body.error || `HTTP ${res.status}: Request failed`;
-      throw new Error(errMsg);
+      const errMsg =
+        body.message ||
+        body.error ||
+        (res.status >= 500
+          ? 'Server error. Please try again later.'
+          : `Request failed (${res.status})`);
+      const err = new Error(errMsg);
+      err.status = res.status;
+      throw err;
     }
     return res.json();
   },
@@ -100,5 +107,21 @@ export const api = {
 
   triggerCategorizationUser(userId) {
     return this.request(`${API_ORIGIN}/api/v1/categorization/trigger/${encodeURIComponent(userId)}`, { method: 'POST' });
+  },
+
+  // ── Actions (outreach recommendations) ─────────────────────────────────────
+
+  getActions() {
+    return this.request(`${API_ORIGIN}/api/v1/actions`);
+  },
+
+  getActionUsers(actionName, page = 0, size = 20) {
+    return this.request(
+      `${API_ORIGIN}/api/v1/actions/${encodeURIComponent(actionName)}/users?page=${page}&size=${size}`
+    );
+  },
+
+  getUserAction(userId) {
+    return this.request(`${API_ORIGIN}/api/v1/users/${encodeURIComponent(userId)}/action`);
   },
 };

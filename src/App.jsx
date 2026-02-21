@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
 import { DimensionsView } from './components/dimensions/DimensionsView';
+import { ActionsView } from './components/actions/ActionsView';
 import { NLQueryView } from './components/nlquery/NLQueryView';
 import { SearchUsersView } from './components/user/SearchUsersView';
 import { UserDetailsDashboard } from './components/user/UserDetailsDashboard';
@@ -12,8 +13,8 @@ const DIMENSIONS_BACK_STATE = { fromDimensions: true };
 function App() {
   const [userId, setUserId] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [activeView, setActiveView] = useState('users');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeView, setActiveView] = useState('actions');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const cameFromDimensionsRef = useRef(false);
 
   const handleSearch = () => {
@@ -33,7 +34,7 @@ function App() {
     cameFromDimensionsRef.current = false;
   }, []);
 
-  const handleSelectUserFromDimensions = useCallback((selectedUserId) => {
+  const handleSelectUserFromList = useCallback((selectedUserId) => {
     if (selectedUserId) {
       setUserId(selectedUserId);
       setSearchInput(selectedUserId);
@@ -61,11 +62,13 @@ function App() {
   const pageTitle =
     activeView === 'dimensions'
       ? 'Dimensions'
-      : activeView === 'users'
-        ? userId
-          ? 'User Dashboard'
-          : 'Users'
-        : 'NL Query';
+      : activeView === 'actions'
+        ? 'Actions'
+        : activeView === 'users'
+          ? userId
+            ? 'User Dashboard'
+            : 'Users'
+          : 'NL Query';
 
   return (
     <div className="app-container">
@@ -88,7 +91,10 @@ function App() {
           <div className="main-breadcrumb">{pageTitle}</div>
           <div className="main">
             {activeView === 'dimensions' && (
-              <DimensionsView onSelectUser={handleSelectUserFromDimensions} />
+              <DimensionsView onSelectUser={handleSelectUserFromList} />
+            )}
+            {activeView === 'actions' && (
+              <ActionsView onSelectUser={handleSelectUserFromList} />
             )}
             {activeView === 'users' && !userId && (
               <SearchUsersView

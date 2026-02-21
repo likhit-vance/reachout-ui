@@ -39,6 +39,16 @@ The UI should use a single config (e.g. in `src/api/api.js`) for the base URL an
 | POST | `/user-details` | Ingest single user (e.g. from UI form) |
 | POST | `/user-details/batch` | Batch ingest (e.g. CSV upload) |
 
+### Actions (outreach recommendations)
+
+| Method | Path | Used for |
+|--------|------|----------|
+| GET | `/actions` | List all actions with user counts (Actions view) |
+| GET | `/actions/{actionName}/users?page=0&size=20` | Paginated users for an action (drill-down) |
+| GET | `/users/{userId}/action` | Recommended action for a user (User Dashboard card) |
+
+**Actions list** returns an array of `{ action_name, display_name, description, priority, user_count }`. **Action users** returns `{ content, page, size, total_elements, total_pages }`; each user has `user_id`, `name`, `email`, `phone`, `country`, `action_name`, `action_display_name`, `dimension_snapshot`, `engagement_score`, `reason`, `evaluated_at`. **User action** returns a single object of the same user shape (no `content` wrapper). The backend returns 500 with message "No action mapping found for userId: ..." when the user has not been evaluated.
+
 ### Dimensions and categorization
 
 | Method | Path | Used for |
