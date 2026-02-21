@@ -33,6 +33,7 @@ Output in `dist/`. For production, set `VITE_API_BASE` in `.env.production` to y
 ## Project structure
 
 - `src/api/api.js` — API client (configurable base URL)
+- `API.md` — API integration documentation (endpoints, responses, UI integration points)
 - `src/components/` — common, conversations, summary, nlquery, categories, layout
 - `src/utils/` — formatTimestamp, truncate, syntaxHighlight
 

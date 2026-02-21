@@ -6,7 +6,8 @@ export const api = {
     const res = await fetch(url, options);
     if (!res.ok) {
       const body = await res.json().catch(() => ({}));
-      throw new Error(body.message || `HTTP ${res.status}: ${body.error || 'Request failed'}`);
+      const errMsg = body.message || body.error || `HTTP ${res.status}: Request failed`;
+      throw new Error(errMsg);
     }
     return res.json();
   },
@@ -22,6 +23,36 @@ export const api = {
   getUserSummary(userId) {
     return this.request(`${API_BASE}/users/${encodeURIComponent(userId)}/summary`);
   },
+
+  // ── User Details (1.3, 1.4) ──────────────────────────────────────────────
+
+  getUserDetails(userId) {
+    return this.request(`${API_ORIGIN}/api/v1/user-details/${encodeURIComponent(userId)}`);
+  },
+
+  // ── Dimensions (4.1, 4.3, 6.1–6.3) ───────────────────────────────────────
+
+  getDimensions() {
+    return this.request(`${API_ORIGIN}/api/v1/dimensions`);
+  },
+
+  getDimensionById(dimensionId) {
+    return this.request(`${API_ORIGIN}/api/v1/dimensions/${encodeURIComponent(dimensionId)}`);
+  },
+
+  getUsersInSubCategory(dimensionId, subCategoryId) {
+    return this.request(
+      `${API_ORIGIN}/api/v1/dimensions/${encodeURIComponent(dimensionId)}/subcategories/${encodeURIComponent(subCategoryId)}/users`
+    );
+  },
+
+  // ── Dimension mappings for a user (5.3) ───────────────────────────────────
+
+  getDimensionMappingsForUser(userId) {
+    return this.request(`${API_ORIGIN}/api/v1/categorization/dimensions/${encodeURIComponent(userId)}`);
+  },
+
+  // ── Natural Language Query ────────────────────────────────────────────────
 
   executeNLQuery(query) {
     return this.request(`${API_BASE}/natural-language`, {

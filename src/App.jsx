@@ -1,69 +1,108 @@
-import { useState } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { Header } from './components/layout/Header';
 import { Sidebar } from './components/layout/Sidebar';
-import { ConversationDetail } from './components/conversations/ConversationDetail';
-import { UserSummaryView } from './components/summary/UserSummaryView';
+import { DimensionsView } from './components/dimensions/DimensionsView';
 import { NLQueryView } from './components/nlquery/NLQueryView';
-import { CategoriesView } from './components/categories/CategoriesView';
+import { SearchUsersView } from './components/user/SearchUsersView';
+import { UserDetailsDashboard } from './components/user/UserDetailsDashboard';
 import './App.css';
+
+const DIMENSIONS_BACK_STATE = { fromDimensions: true };
 
 function App() {
   const [userId, setUserId] = useState('');
   const [searchInput, setSearchInput] = useState('');
-  const [activeView, setActiveView] = useState('conversations');
-  const [selectedConvId, setSelectedConvId] = useState(null);
+  const [activeView, setActiveView] = useState('users');
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const cameFromDimensionsRef = useRef(false);
 
   const handleSearch = () => {
     const trimmed = searchInput.trim();
     if (trimmed) {
       setUserId(trimmed);
-      setSelectedConvId(null);
-      setActiveView('conversations');
+      setSearchInput(trimmed);
+      setActiveView('users');
+      cameFromDimensionsRef.current = false;
     }
   };
 
-  return (
-    <div>
-      <Header
-        searchInput={searchInput}
-        setSearchInput={setSearchInput}
-        onSearch={handleSearch}
-        userId={userId}
-      />
+  const goToDimensions = useCallback(() => {
+    setActiveView('dimensions');
+    setUserId('');
+    setSearchInput('');
+    cameFromDimensionsRef.current = false;
+  }, []);
 
-      <div className="layout">
-        <Sidebar
+  const handleSelectUserFromDimensions = useCallback((selectedUserId) => {
+    if (selectedUserId) {
+      setUserId(selectedUserId);
+      setSearchInput(selectedUserId);
+      setActiveView('users');
+      cameFromDimensionsRef.current = true;
+      const url = window.location.pathname + window.location.search || '/';
+      history.pushState(DIMENSIONS_BACK_STATE, '', url);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeView === 'dimensions') cameFromDimensionsRef.current = false;
+  }, [activeView]);
+
+  useEffect(() => {
+    const onPopState = () => {
+      if (cameFromDimensionsRef.current) {
+        goToDimensions();
+      }
+    };
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [goToDimensions]);
+
+  const pageTitle =
+    activeView === 'dimensions'
+      ? 'Dimensions'
+      : activeView === 'users'
+        ? userId
+          ? 'User Dashboard'
+          : 'Users'
+        : 'NL Query';
+
+  return (
+    <div className="app-container">
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        activeView={activeView}
+        setActiveView={setActiveView}
+      />
+      <div className="right-panel">
+        <Header
+          onMenuClick={() => setSidebarOpen((o) => !o)}
+          sidebarOpen={sidebarOpen}
+          searchInput={searchInput}
+          setSearchInput={setSearchInput}
+          onSearch={handleSearch}
           userId={userId}
-          activeView={activeView}
-          setActiveView={setActiveView}
-          selectedConvId={selectedConvId}
-          onSelectConversation={(cid) => {
-            setSelectedConvId(cid);
-            setActiveView('conversations');
-          }}
         />
-        {activeView === 'categories' ? (
-          <CategoriesView
-            onUserClick={(uid) => {
-              setSearchInput(uid);
-              setUserId(uid);
-              setActiveView('summary');
-            }}
-          />
-        ) : (
+        <div className="main-wrap">
+          <div className="main-breadcrumb">{pageTitle}</div>
           <div className="main">
-            {activeView === 'conversations' && !selectedConvId && (
-              <div className="empty-state">
-                {userId ? 'Select a conversation from the sidebar' : 'Enter a User ID to get started'}
-              </div>
+            {activeView === 'dimensions' && (
+              <DimensionsView onSelectUser={handleSelectUserFromDimensions} />
             )}
-            {activeView === 'conversations' && selectedConvId && (
-              <ConversationDetail userId={userId} conversationId={selectedConvId} />
+            {activeView === 'users' && !userId && (
+              <SearchUsersView
+                searchInput={searchInput}
+                setSearchInput={setSearchInput}
+                onSearch={handleSearch}
+              />
             )}
-            {activeView === 'summary' && <UserSummaryView userId={userId} />}
+            {activeView === 'users' && userId && (
+              <UserDetailsDashboard userId={userId} />
+            )}
             {activeView === 'nlquery' && <NLQueryView />}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );

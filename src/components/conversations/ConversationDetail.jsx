@@ -7,7 +7,7 @@ import { StatusBadge } from '../common/StatusBadge';
 import { formatTimestamp } from '../../utils/format';
 import { syntaxHighlight } from '../../utils/syntaxHighlight';
 
-export function ConversationDetail({ userId, conversationId }) {
+export function ConversationDetail({ userId, conversationId, hideSummary = false }) {
   const [conv, setConv] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -63,36 +63,38 @@ export function ConversationDetail({ userId, conversationId }) {
         </div>
       </div>
 
-      <div className="card">
-        <h2>LLM Summary</h2>
-        {conv.summarised_data ? (
-          <div className="summary-text">{conv.summarised_data}</div>
-        ) : (
-          <p style={{ color: '#999', fontStyle: 'italic' }}>
-            Summary not yet available (status: {conv.processing_status})
-          </p>
-        )}
-        {conv.summarization_metadata && (
-          <div style={{ marginTop: 14 }}>
-            <div className="meta-grid">
-              <div className="meta-item">
-                <div className="meta-label">Model</div>
-                <div className="meta-value">{conv.summarization_metadata.llm_model}</div>
-              </div>
-              <div className="meta-item">
-                <div className="meta-label">Tokens (in/out)</div>
-                <div className="meta-value">
-                  {conv.summarization_metadata.input_tokens} / {conv.summarization_metadata.output_tokens}
+      {!hideSummary && (
+        <div className="card">
+          <h2>LLM Summary</h2>
+          {conv.summarised_data ? (
+            <div className="summary-text">{conv.summarised_data}</div>
+          ) : (
+            <p style={{ color: '#999', fontStyle: 'italic' }}>
+              Summary not yet available (status: {conv.processing_status})
+            </p>
+          )}
+          {conv.summarization_metadata && (
+            <div style={{ marginTop: 14 }}>
+              <div className="meta-grid">
+                <div className="meta-item">
+                  <div className="meta-label">Model</div>
+                  <div className="meta-value">{conv.summarization_metadata.llm_model}</div>
+                </div>
+                <div className="meta-item">
+                  <div className="meta-label">Tokens (in/out)</div>
+                  <div className="meta-value">
+                    {conv.summarization_metadata.input_tokens} / {conv.summarization_metadata.output_tokens}
+                  </div>
+                </div>
+                <div className="meta-item">
+                  <div className="meta-label">Summarized At</div>
+                  <div className="meta-value">{formatTimestamp(conv.summarization_metadata.summarized_at)}</div>
                 </div>
               </div>
-              <div className="meta-item">
-                <div className="meta-label">Summarized At</div>
-                <div className="meta-value">{formatTimestamp(conv.summarization_metadata.summarized_at)}</div>
-              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
 
       <div className="card">
         <h2>Raw Conversation Data</h2>
