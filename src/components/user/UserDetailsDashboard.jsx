@@ -12,6 +12,8 @@ import {
   formatLtv,
   getInitials,
   truncate,
+  getEngagementTier,
+  getEngagementTierLabel,
 } from '../../utils/format';
 
 const ACTIVITY_PAGE_SIZE = 20;
@@ -348,9 +350,19 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
             <div className="ud-action-card">
               <div className="ud-action-header">
                 <span className="ud-action-name">{userAction.action_display_name || userAction.action_name}</span>
-                {userAction.engagement_score != null && (
-                  <span className="ud-action-score">Score: {userAction.engagement_score}</span>
-                )}
+                {userAction.engagement_score != null && (() => {
+                  const tier = getEngagementTier(userAction.engagement_score);
+                  const label = getEngagementTierLabel(userAction.engagement_score);
+                  return (
+                    <span
+                      className={`engagement-badge ${tier ? `engagement-${tier}` : ''}`}
+                      title="Engagement score: base 50, boosted by recent activity (orders, logins, clicks), reduced by failures and fatigue. Range ~-50 to 100. Tiers: ≥80 Strong intent, 60-79 Active, 40-59 Slipping, 20-39 At-risk, <20 Critical."
+                    >
+                      {userAction.engagement_score}
+                      {label && <span className="engagement-tier-label"> · {label}</span>}
+                    </span>
+                  );
+                })()}
               </div>
               {userAction.dimension_snapshot && (
                 <div className="ud-action-dims">
@@ -386,7 +398,7 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
         {summary?.conversation_count_by_channel && Object.keys(summary.conversation_count_by_channel).length > 0 && (
           <div className="ud-channel-pills">
             {Object.entries(summary.conversation_count_by_channel).map(([ch, count]) => (
-              <span key={ch} className="ud-channel-pill">
+              <span key={ch} className={`ud-channel-pill channel-${ch}`}>
                 {ch}: {count}
               </span>
             ))}

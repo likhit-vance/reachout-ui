@@ -1150,6 +1150,14 @@
   background: var(--color-bg);
 }
 
+.actions-users-table .actions-col-reason {
+  min-width: 320px;
+  max-width: 420px;
+  white-space: normal;
+  word-wrap: break-word;
+  line-height: 1.4;
+}
+
 .actions-users-table tbody tr:hover {
   background: var(--color-bg);
 }
@@ -2269,6 +2277,32 @@
   color: var(--color-primary);
 }
 
+/* Engagement score badge — color by tier (green → blue → amber → orange → red) */
+.engagement-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  /* fallback when tier is missing */
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+}
+
+.engagement-badge.engagement-strong_intent { background: #d1fae5; color: #047857; }
+.engagement-badge.engagement-active        { background: #dbeafe; color: #1d4ed8; }
+.engagement-badge.engagement-slipping     { background: #fef3c7; color: #b45309; }
+.engagement-badge.engagement-at_risk      { background: #ffedd5; color: #c2410c; }
+.engagement-badge.engagement-critical     { background: #fee2e2; color: #b91c1c; }
+
+.engagement-tier-label {
+  font-weight: 500;
+  opacity: 0.95;
+}
+
 .ud-action-dims {
   display: flex;
   flex-wrap: wrap;
@@ -2475,6 +2509,13 @@
   border-radius: var(--radius-sm);
   color: var(--color-text-secondary);
 }
+
+/* Behavior summary: same channel colors as Activity timeline */
+.ud-channel-pill.channel-PULSE { background: #dbeafe; color: #1d4ed8; }
+.ud-channel-pill.channel-MOENGAGE { background: #ffedd5; color: #c2410c; }
+.ud-channel-pill.channel-INTERCOM { background: #ccfbf1; color: #0f766e; }
+.ud-channel-pill.channel-DECAGON { background: #ede9fe; color: #5b21b6; }
+.ud-channel-pill.channel-USER_ACTION { background: #fce7f3; color: #9d174d; }
 
 .ud-properties-toolbar {
   margin-bottom: var(--space-3);

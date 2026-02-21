@@ -39,3 +39,30 @@ export function truncate(str, len = 80) {
   if (!str) return '';
   return str.length > len ? str.slice(0, len) + '...' : str;
 }
+
+/**
+ * Engagement score tiers (matches backend EngagementTierEvaluator).
+ * Returns tier key for CSS class and display.
+ */
+export function getEngagementTier(score) {
+  if (score == null || Number.isNaN(Number(score))) return null;
+  const n = Number(score);
+  if (n >= 80) return 'strong_intent';
+  if (n >= 60) return 'active';
+  if (n >= 40) return 'slipping';
+  if (n >= 20) return 'at_risk';
+  return 'critical';
+}
+
+/** Human-readable tier label for engagement score. */
+export function getEngagementTierLabel(score) {
+  const tier = getEngagementTier(score);
+  const labels = {
+    strong_intent: 'Strong intent',
+    active: 'Active',
+    slipping: 'Slipping',
+    at_risk: 'At risk',
+    critical: 'Critical',
+  };
+  return tier ? labels[tier] : null;
+}

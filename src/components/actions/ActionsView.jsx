@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { api } from '../../api/api';
 import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
-import { formatDateShort } from '../../utils/format';
+import { formatDateShort, getEngagementTier, getEngagementTierLabel } from '../../utils/format';
 
 const PAGE_SIZE = 20;
 
@@ -162,12 +162,12 @@ export function ActionsView({ onSelectUser }) {
                           <thead>
                             <tr>
                               <th>User ID</th>
+                              <th title="Engagement score: base 50 ± boosts/penalties; drives engagement tier (strong intent / active / slipping / at-risk / critical)">Engagement</th>
+                              <th className="actions-col-reason">Reason</th>
                               <th>Name</th>
                               <th>Contact</th>
                               <th>Country</th>
                               <th>Dimensions</th>
-                              <th>Score</th>
-                              <th>Reason</th>
                               <th>Evaluated</th>
                             </tr>
                           </thead>
@@ -187,12 +187,30 @@ export function ActionsView({ onSelectUser }) {
                                     <span>{row.user_id}</span>
                                   )}
                                 </td>
+                                <td>
+                                  {row.engagement_score != null ? (() => {
+                                    const tier = getEngagementTier(row.engagement_score);
+                                    const label = getEngagementTierLabel(row.engagement_score);
+                                    return (
+                                      <span
+                                        className={`engagement-badge ${tier ? `engagement-${tier}` : ''}`}
+                                        title="Engagement score tier"
+                                      >
+                                        {row.engagement_score}
+                                        {label && <span className="engagement-tier-label"> · {label}</span>}
+                                      </span>
+                                    );
+                                  })() : '—'}
+                                </td>
+                                <td className="actions-col-reason" title={row.reason}>
+                                  {row.reason ?? '—'}
+                                </td>
                                 <td>{row.name ?? '—'}</td>
                                 <td>
                                   {[row.email, row.phone].filter(Boolean).join(' · ') || '—'}
                                 </td>
                                 <td>{row.country ?? '—'}</td>
-                                <td title={row.reason}>
+                                <td>
                                   {row.dimension_snapshot ? (
                                     <span className="actions-dims">
                                       {[
@@ -207,16 +225,6 @@ export function ActionsView({ onSelectUser }) {
                                   ) : (
                                     '—'
                                   )}
-                                </td>
-                                <td>
-                                  {row.engagement_score != null ? row.engagement_score : '—'}
-                                </td>
-                                <td title={row.reason}>
-                                  {row.reason
-                                    ? row.reason.length > 40
-                                      ? row.reason.slice(0, 40) + '…'
-                                      : row.reason
-                                    : '—'}
                                 </td>
                                 <td>
                                   {row.evaluated_at
