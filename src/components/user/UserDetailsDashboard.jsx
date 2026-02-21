@@ -5,6 +5,7 @@ import { ErrorBox } from '../common/ErrorBox';
 import { ChannelBadge } from '../common/ChannelBadge';
 import { StatusBadge } from '../common/StatusBadge';
 import { ConversationDetail } from '../conversations/ConversationDetail';
+import { StructuredActualData } from '../conversations/StructuredActualData';
 import {
   formatTimestamp,
   formatDateShort,
@@ -494,6 +495,30 @@ export function UserDetailsDashboard({ userId, onSelectConversation }) {
                           <p className="ud-timeline-preview">
                             {conv.summarised_data ? truncate(conv.summarised_data, 140) : '—'}
                           </p>
+                          {conv.actual_data && (
+                            <div className="ud-timeline-actual-wrap">
+                              {conv.actual_data.audio_file_url && (
+                                <div className="ud-timeline-audio-row">
+                                  <audio
+                                    className="conv-audio-player"
+                                    controls
+                                    preload="metadata"
+                                    src={conv.actual_data.audio_file_url}
+                                    aria-label="Play conversation audio"
+                                    style={{ maxWidth: 280, height: 36 }}
+                                  />
+                                </div>
+                              )}
+                              <div className="ud-timeline-actual-data">
+                                <StructuredActualData
+                                  data={conv.actual_data}
+                                  excludeKeys={['audio_file_url']}
+                                  compact
+                                  maxPreviewKeys={6}
+                                />
+                              </div>
+                            </div>
+                          )}
                           <button
                             type="button"
                             className="ud-timeline-action"

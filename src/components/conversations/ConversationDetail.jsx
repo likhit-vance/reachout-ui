@@ -5,7 +5,7 @@ import { ErrorBox } from '../common/ErrorBox';
 import { ChannelBadge } from '../common/ChannelBadge';
 import { StatusBadge } from '../common/StatusBadge';
 import { formatTimestamp } from '../../utils/format';
-import { syntaxHighlight } from '../../utils/syntaxHighlight';
+import { StructuredActualData, RawActualDataJson } from './StructuredActualData';
 
 export function ConversationDetail({ userId, conversationId, hideSummary = false }) {
   const [conv, setConv] = useState(null);
@@ -97,11 +97,31 @@ export function ConversationDetail({ userId, conversationId, hideSummary = false
       )}
 
       <div className="card">
-        <h2>Raw Conversation Data</h2>
-        <div
-          className="json-block"
-          dangerouslySetInnerHTML={{ __html: syntaxHighlight(JSON.stringify(conv.actual_data, null, 2)) }}
-        />
+        <h2>Conversation Data</h2>
+        {conv.actual_data?.audio_file_url && (
+          <div className="conv-audio-card">
+            <h3 className="conv-audio-title">Audio</h3>
+            <audio
+              className="conv-audio-player"
+              controls
+              preload="metadata"
+              src={conv.actual_data.audio_file_url}
+              aria-label="Play conversation audio"
+            >
+              Your browser does not support the audio element.
+            </audio>
+          </div>
+        )}
+        {conv.actual_data && (
+          <>
+            <StructuredActualData
+              data={conv.actual_data}
+              excludeKeys={['audio_file_url']}
+            />
+            <RawActualDataJson data={conv.actual_data} />
+          </>
+        )}
+        {!conv.actual_data && <p className="ud-muted">No conversation data.</p>}
       </div>
 
       {conv.processing_error && (
