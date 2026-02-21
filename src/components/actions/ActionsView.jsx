@@ -189,7 +189,7 @@ export function ActionsView({ onSelectUser }) {
               <button
                 key={group.key}
                 type="button"
-                className={`actions-category-card ${isSelected ? 'selected' : ''} ${isEmpty ? 'disabled' : ''}`}
+                className={`actions-category-card actions-category-card--${group.key} ${isSelected ? 'selected' : ''} ${isEmpty ? 'disabled' : ''}`}
                 onClick={() => !isEmpty && handleSelectCategory(group.key)}
                 disabled={isEmpty}
               >
@@ -201,7 +201,7 @@ export function ActionsView({ onSelectUser }) {
         </div>
 
         {selectedCategory && (
-          <div className="actions-strip-wrap">
+          <div className={`actions-strip-wrap actions-strip-wrap--${selectedCategory}`}>
             <h3 className="actions-strip-title">{PRIORITY_GROUPS.find((g) => g.key === selectedCategory)?.label ?? selectedCategory}</h3>
             <div className="actions-strip">
               {groupActionsFor(selectedCategory).map((action) => {
@@ -210,7 +210,7 @@ export function ActionsView({ onSelectUser }) {
                   <button
                     key={action.action_name}
                     type="button"
-                    className={`actions-action-card actions-action-card--strip ${isSelected ? 'selected' : ''}`}
+                    className={`actions-action-card actions-action-card--strip actions-action-card--${selectedCategory} ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleSelectAction(action)}
                   >
                     <span className="actions-action-name">
