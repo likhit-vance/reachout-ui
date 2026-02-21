@@ -4,6 +4,7 @@ import { Loading } from '../common/Loading';
 import { ErrorBox } from '../common/ErrorBox';
 import { formatTimestamp, truncate } from '../../utils/format';
 import { syntaxHighlight } from '../../utils/syntaxHighlight';
+import { NLQueryChart } from './NLQueryChart';
 
 export function NLQueryView() {
   const [query, setQuery] = useState('');
@@ -11,6 +12,7 @@ export function NLQueryView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [history, setHistory] = useState([]);
+  const [showChart, setShowChart] = useState(false);
 
   const execute = useCallback(() => {
     if (!query.trim() || loading) return;
@@ -21,6 +23,7 @@ export function NLQueryView() {
       .executeNLQuery(query.trim())
       .then((data) => {
         setResult(data);
+        setShowChart(false);
         setHistory((prev) => [{ query: query.trim(), timestamp: new Date() }, ...prev.slice(0, 9)]);
       })
       .catch((e) => setError(e.message))
@@ -90,6 +93,27 @@ export function NLQueryView() {
               )}
             </div>
           </div>
+
+          {result.visualization && (
+            <div className="card">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                <h2 style={{ margin: 0 }}>Visualization</h2>
+                <button
+                  type="button"
+                  className="nl-execute"
+                  style={{ padding: '8px 16px', fontSize: 13 }}
+                  onClick={() => setShowChart((v) => !v)}
+                >
+                  {showChart ? 'Hide chart' : 'View chart'}
+                </button>
+              </div>
+              {showChart && (
+                <div style={{ marginTop: 16 }}>
+                  <NLQueryChart visualization={result.visualization} />
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="card">
             <h2>Generated MongoDB Query</h2>

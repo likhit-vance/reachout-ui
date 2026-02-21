@@ -28,6 +28,8 @@ The UI should use a single config (e.g. in `src/api/api.js`) for the base URL an
 |--------|------|------|----------|
 | POST | `/query/natural-language` | `{ "query": "..." }` | NL Query view: run English query, show results and generated query |
 
+**NL query response** may include an optional `visualization` object (omitted when the query is not plottable). When present, the UI shows a "View chart" option; on click it renders a Chart.js-compatible chart. Structure: `chart_type` (`"bar"` \| `"pie"` \| `"line"` \| `"doughnut"`), `title`, `labels` (string[]), `datasets` (`{ label, data }[]`), `x_label`, `y_label` (nullable). See NL Query view and `NLQueryChart.jsx` for usage.
+
 ### User details
 
 | Method | Path | Used for |

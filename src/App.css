@@ -1076,6 +1076,16 @@
   font-weight: 500;
 }
 
+.nl-chart-wrap {
+  min-height: 280px;
+  position: relative;
+}
+
+.nl-chart-wrap--pie {
+  max-width: 400px;
+  margin: 0 auto;
+}
+
 /* Results table */
 .results-table-wrap {
   overflow-x: auto;
