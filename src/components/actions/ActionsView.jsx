@@ -9,15 +9,33 @@ const PAGE_SIZE = 20;
 
 /** Priority 1–4 = High, 5–8 = Medium, 9–12 = Low (max priority in seed is 12) */
 const PRIORITY_GROUPS = [
-  { key: 'high', label: 'High', min: 1, max: 4 },
-  { key: 'medium', label: 'Medium', min: 5, max: 8 },
-  { key: 'low', label: 'Low', min: 9, max: 12 },
+  {
+    key: 'high',
+    label: 'High',
+    min: 1,
+    max: 4,
+    copy: 'Immediate or stop actions — trust/fatigue severe, high-value dormant.',
+  },
+  {
+    key: 'medium',
+    label: 'Medium',
+    min: 5,
+    max: 8,
+    copy: 'Review and monitor — dormant soft trust, at-risk, repeat active.',
+  },
+  {
+    key: 'low',
+    label: 'Low',
+    min: 9,
+    max: 12,
+    copy: 'Reactivation and onboarding — first-time, new, fallback monitor.',
+  },
 ];
 
 function getPriorityGroup(priority) {
   if (priority == null) return 'medium';
   const p = Number(priority);
-  const g = PRIORITY_GROUPS.find((g) => p >= g.min && p <= g.max);
+  const g = PRIORITY_GROUPS.find((gr) => p >= gr.min && p <= gr.max);
   return g ? g.key : 'medium';
 }
 
@@ -27,6 +45,7 @@ export function ActionsView({ onSelectUser }) {
   const [error, setError] = useState(null);
   const [retryTrigger, setRetryTrigger] = useState(0);
 
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [selectedAction, setSelectedAction] = useState(null);
   const [usersPage, setUsersPage] = useState(null);
   const [usersLoading, setUsersLoading] = useState(false);
@@ -67,6 +86,11 @@ export function ActionsView({ onSelectUser }) {
       .catch((e) => setUsersError(e.message || 'Failed to load users'))
       .finally(() => setUsersLoading(false));
   }, [selectedAction, page]);
+
+  const handleSelectCategory = useCallback((groupKey) => {
+    setSelectedCategory((current) => (current === groupKey ? null : groupKey));
+    setSelectedAction(null);
+  }, []);
 
   const handleSelectAction = useCallback((action) => {
     setSelectedAction(action);
@@ -141,52 +165,66 @@ export function ActionsView({ onSelectUser }) {
     );
   }
 
+  const groupActionsFor = (groupKey) =>
+    (actions || [])
+      .filter((a) => (a.user_count ?? 0) > 0 && getPriorityGroup(a.priority) === groupKey)
+      .sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
+
   return (
     <div className="actions-view">
-      <div className="actions-layout">
-        <aside className="actions-sidebar">
-          <h2 className="actions-sidebar-title">Outreach actions</h2>
-          <p className="actions-sidebar-desc">
-            Recommended actions based on dimension evaluation. Click an action to see users.
+      <div className="actions-layout-h">
+        <header className="actions-header">
+          <h2 className="actions-header-title">Outreach actions</h2>
+          <p className="actions-header-desc">
+            Recommended actions based on dimension evaluation. Pick a category, then an action to see users.
           </p>
-          <div className="actions-list">
-            {PRIORITY_GROUPS.map((group) => {
-              const groupActions = (actions || [])
-                .filter((a) => (a.user_count ?? 0) > 0 && getPriorityGroup(a.priority) === group.key)
-                .sort((a, b) => (a.priority ?? 99) - (b.priority ?? 99));
-              if (groupActions.length === 0) return null;
-              return (
-                <div key={group.key} className="actions-priority-group">
-                  <h3 className="actions-priority-group-title">{group.label}</h3>
-                  {groupActions.map((action) => {
-                    const isSelected =
-                      selectedAction && selectedAction.action_name === action.action_name;
-                    return (
-                      <button
-                        key={action.action_name}
-                        type="button"
-                        className={`actions-action-card ${isSelected ? 'selected' : ''}`}
-                        onClick={() => handleSelectAction(action)}
-                      >
-                        <span className="actions-action-name">
-                          {action.display_name || action.action_name}
-                        </span>
-                        {action.description && (
-                          <span className="actions-action-desc" title={action.description}>
-                            {action.description}
-                          </span>
-                        )}
-                        <span className="actions-action-meta">
-                          Priority {action.priority ?? '—'} · {action.user_count ?? 0} users
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              );
-            })}
+        </header>
+
+        <div className="actions-category-row">
+          {PRIORITY_GROUPS.map((group) => {
+            const groupActions = groupActionsFor(group.key);
+            const isEmpty = groupActions.length === 0;
+            const isSelected = selectedCategory === group.key;
+            return (
+              <button
+                key={group.key}
+                type="button"
+                className={`actions-category-card ${isSelected ? 'selected' : ''} ${isEmpty ? 'disabled' : ''}`}
+                onClick={() => !isEmpty && handleSelectCategory(group.key)}
+                disabled={isEmpty}
+              >
+                <span className="actions-category-label">{group.label}</span>
+                <span className="actions-category-copy">{group.copy}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        {selectedCategory && (
+          <div className="actions-strip-wrap">
+            <h3 className="actions-strip-title">{PRIORITY_GROUPS.find((g) => g.key === selectedCategory)?.label ?? selectedCategory}</h3>
+            <div className="actions-strip">
+              {groupActionsFor(selectedCategory).map((action) => {
+                const isSelected = selectedAction && selectedAction.action_name === action.action_name;
+                return (
+                  <button
+                    key={action.action_name}
+                    type="button"
+                    className={`actions-action-card actions-action-card--strip ${isSelected ? 'selected' : ''}`}
+                    onClick={() => handleSelectAction(action)}
+                  >
+                    <span className="actions-action-name">
+                      {action.display_name || action.action_name}
+                    </span>
+                    <span className="actions-action-meta">
+                      {action.user_count ?? 0} users
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-        </aside>
+        )}
 
         <div className="actions-main">
           {!selectedAction ? (

@@ -1140,6 +1140,114 @@
   color: var(--color-primary-hover);
 }
 
+/* Horizontal layout: category row → action strip → table */
+.actions-layout-h {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-height: 400px;
+}
+
+.actions-header {
+  margin: 0;
+}
+
+.actions-header-title {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 var(--space-2);
+  color: var(--color-text);
+}
+
+.actions-header-desc {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.actions-category-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+}
+
+.actions-category-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.actions-category-card:hover:not(.disabled) {
+  background: var(--color-primary-muted);
+  border-color: var(--color-primary-border, rgba(59, 130, 246, 0.35));
+}
+
+.actions-category-card.selected {
+  background: var(--color-primary-muted);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.actions-category-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.actions-category-label {
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: var(--space-2);
+  color: var(--color-text);
+}
+
+.actions-category-copy {
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+  line-height: 1.45;
+}
+
+.actions-strip-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.actions-strip-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.actions-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.actions-action-card--strip {
+  flex: 0 0 auto;
+  min-width: 160px;
+}
+
+.actions-action-card--strip .actions-action-desc {
+  display: none;
+}
+
 .actions-layout {
   display: flex;
   gap: var(--space-6);
@@ -1243,6 +1351,11 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
   font-weight: 500;
+}
+
+.actions-layout-h .actions-main {
+  flex: 1;
+  min-height: 280px;
 }
 
 .actions-main {

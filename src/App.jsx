@@ -77,7 +77,7 @@ function App() {
           : activeView === 'users'
             ? userId
               ? 'User Dashboard'
-              : 'Users'
+              : ''
             : 'NL Query';
 
   return (
