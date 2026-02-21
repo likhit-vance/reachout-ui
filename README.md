@@ -1,16 +1,39 @@
-# React + Vite
+# Aspora Reachout Platform — UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Standalone Vite + React frontend for the Aspora Reachout Platform. Consumes the same API as the original single-file UI (conversations, user summary, natural language query, categories).
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+```bash
+npm install
+```
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run dev
+```
 
-## Expanding the ESLint configuration
+Runs at **http://localhost:5173**. Set the API base URL in `.env.development` (default: `http://localhost:8080`). Ensure the backend is running and CORS allows `http://localhost:5173`.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Build
+
+```bash
+npm run build
+```
+
+Output in `dist/`. For production, set `VITE_API_BASE` in `.env.production` to your API origin (or leave empty for same-origin).
+
+## Environment
+
+| Variable         | Description |
+|------------------|-------------|
+| `VITE_API_BASE` | API origin (e.g. `http://localhost:8080`). Empty = same origin. |
+
+## Project structure
+
+- `src/api/api.js` — API client (configurable base URL)
+- `src/components/` — common, conversations, summary, nlquery, categories, layout
+- `src/utils/` — formatTimestamp, truncate, syntaxHighlight
+
+This repo was migrated from the single-file React UI in the backend’s `static/index.html`.
